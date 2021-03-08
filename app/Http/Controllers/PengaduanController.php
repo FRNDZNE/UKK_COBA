@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Tanggapan;
 use Auth;
 use File;
+use PDF;
 
 class PengaduanController extends Controller
 {
@@ -100,5 +101,12 @@ class PengaduanController extends Controller
 
         $data->delete();
         return back();
+    }
+
+    public function cetak($id)
+    {
+        $pengaduan = Pengaduan::where('id',$id)->first();
+        $pdf = PDF::loadview('cetak',['pengaduan'=> $pengaduan])->setPaper('a4' , 'portrait');
+        return $pdf->stream('cetak');
     }
 }

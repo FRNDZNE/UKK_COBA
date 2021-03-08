@@ -23,6 +23,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/template-depan', function(){
+    return view('welcome2');
+});
+
 Auth::routes();
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
@@ -32,7 +36,12 @@ Route::middleware(['auth', 'role:admin|petugas'])->prefix('petugas')->group(func
 
     //CRUD Tanggapan
     Route::post('proses/{id}', [App\Http\Controllers\TanggapanController::class, 'proses'])->name('proses.pengaduan');
-    Route::post('/menanggapi',[\App\Http\Controllers\TanggapanController::class, 'store_tanggapan'])->name('store.tanggapan');
+    Route::post('menanggapi',[App\Http\Controllers\TanggapanController::class, 'store_tanggapan'])->name('store.tanggapan');
+    Route::post('selesai/{id}',[App\Http\Controllers\TanggapanController::class, 'selesai'])->name('selesai');
+});
+
+Route::middleware(['auth' , 'role:admin'])->prefix('petugas')->group(function(){
+    Route::get('cetak/{id}', [App\Http\Controllers\PengaduanController::class, 'cetak'])->name('cetak');
 });
 
 Route::middleware(['auth', 'role:masyarakat'])->prefix('masyarakat')->group(function () {

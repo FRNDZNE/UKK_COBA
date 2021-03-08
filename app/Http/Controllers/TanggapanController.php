@@ -22,18 +22,32 @@ class TanggapanController extends Controller
 
     public function store_tanggapan(Request $request)
     {
-        Tanggapan::updateOrCreate([
-            'user_id' => Auth::id(),
-            'pengaduan_id' => $request->pengaduan_id,
-            'isi_tanggapan' => $request->isi_tanggapan,
-        ]);
+        // $data = $request->all();
+        // dd ($data);
+        // dd ($data);
+        $pengaduan = Pengaduan::find($request->pengaduan_id);
 
-        Pengaduan::updateOrCreate([
+    	$data = $pengaduan->tanggapan()->updateOrCreate(['pengaduan_id' => $request->pengaduan_id], [
+    		'user_id' => Auth::id(),
+            'tanggal' => date('y-m-d'),
+    		'isi_tanggapan' => $request->isi_tanggapan,
+    	]);
+
+    	$pengaduan->save();
+
+    	return back();
+
+
+    }
+
+    public function selesai($id)
+    {
+        $data = Pengaduan::find($id);
+        $data->update([
             'status' => 'selesai',
         ]);
 
         return back();
-
     }
 
 

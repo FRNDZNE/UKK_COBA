@@ -21,19 +21,30 @@
                         <span class="badge bg-success">Selesai</span>
                     @endif
                 </td>
+                <form id="proses-{{$pengaduan->id}}" action="{{route('proses.pengaduan',$pengaduan->id)}}" method="post">
+                    @csrf
+                </form>
+                <form id="selesai-{{$pengaduan->id}}" action="{{route('selesai',$pengaduan->id)}}" method="post">
+                    @csrf
+                </form>
                 <td>
-                    @if ($pengaduan->status == 'dikirim')
-                        <form action="{{ route('proses.pengaduan', $pengaduan->id) }}" method="post">
-                            @csrf
-                            <button type="submit" class="btn btn-warning btn-sm">Proses</button>
-                        </form>
-                    @else
+                    @if ($pengaduan->status == 'proses')
                         <button disabled="disabled" class="btn btn-warning btn-sm">Proses</button>
+                        <a onclick="document.getElementById('selesai-{{$pengaduan->id}}').submit();" class="btn btn-success btn-sm">Selesai</a>
+                    @elseif($pengaduan->status == 'selesai')
+                        <button disabled="disabled" class="btn btn-warning btn-sm">Proses</button>
+                        <button disabled="disabled" class="btn btn-success btn-sm">Selesai</button>
+                    @else
+                        <a onclick="document.getElementById('proses-{{$pengaduan->id}}').submit();" class="btn btn-warning btn-sm">Proses</a>
+                        <button disabled="disabled" class="btn btn-success btn-sm">Selesai</button>
                     @endif
                     <button type="button" class="btn btn-info btn-sm" data-toggle="modal"
                         data-target="#detail-{{ $pengaduan->id }}">
                         Detail
                     </button>
+                    @role('admin')
+                        <a href="{{route('cetak',$pengaduan->id)}}" target="_blamk" class="btn btn-secondary text-light btn-sm">Cetak</a>
+                    @endrole
                 </td>
                 {{-- Modal Detail --}}
                 <div class="modal fade" id="detail-{{ $pengaduan->id }}" tabindex="-1" role="dialog"
@@ -56,34 +67,36 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <p>{{ $pengaduan->isi_laporan }}</p>
+
+                                    <div class="col-md-6 flex-column  ">
+
+                                        <div class="col-md-12">
+                                            <p>{{ $pengaduan->isi_laporan }}</p>
+                                        </div>
+                                        <div class="col-md-12 ">
+                                            <label class="font-weight-bold">Tanggapan</label>
+                                            <form action="{{route('store.tanggapan')}}" method="POST" id="formcreate-{{$pengaduan->id}}">
+                                                @csrf
+                                                    <input type="hidden" name="pengaduan_id" value="{{$pengaduan->id}}">
+                                                @if (isset($pengaduan->tanggapan->isi_tanggapan))
+                                                    @if ($pengaduan->status == 'selesai')
+                                                        <textarea disabled cols="30" rows="10" class="form-control">{{$pengaduan->tanggapan->isi_tanggapan}}</textarea>
+                                                    @else
+                                                        <textarea name="isi_tanggapan" cols="30" rows="10" class="form-control">{{$pengaduan->tanggapan->isi_tanggapan}}</textarea>
+                                                    @endif
+                                                @else
+                                                    @if ($pengaduan->status == 'dikirim')
+                                                        <textarea disabled placeholder="Buat Tanggapan Disini"  cols="30" rows="10" class="form-control"></textarea>
+                                                    @else
+                                                        <textarea placeholder="Buat Tanggapan Disini" name="isi_tanggapan"  cols="30" rows="10" class="form-control"></textarea>
+                                                    @endif
+                                                @endif
+                                            </form>
+                                        </div>
                                     </div>
-                                    {{-- <div class="col-md-6">
-                                        <img class="img-fluid" style="width: 20%" src="{{ asset($pengaduan->foto) }}"
-                                            alt="Foto Tidak Ada Atau Rusak">
-                                    </div> --}}
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p class="font-weight-bold">Tanggapan</p>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <form action="{{route('store.tanggapan')}}" method="POST" id="formcreate">
-                                            @csrf
-                                                <input type="hidden" name="pengaduan_id" value="{{$pengaduan->id}}">
-                                            @if (isset($pengaduan->tanggapan->isi_tanggapan))
-                                            <textarea name="isi_tanggapan" id="" cols="30" rows="10" class="form-control">{{$pengaduan->tanggapan->isi_tanggapan}}</textarea>
-                                            @else
-                                                <textarea placeholder="Buat Tanggapan Disini" name="isi_tanggapan"  id="" cols="30" rows="10" class="form-control"></textarea>
-                                            @endif
-                                        </form>
-                                    </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 align-items-start">
                                         @if (isset($pengaduan->foto))
-                                            <img class="img-fluid" src="{{ asset($pengaduan->foto) }}" alt="">
+                                            <img class="img-fluid" style="height: 50vh;width:auto;" src="{{ asset($pengaduan->foto) }}" alt="Foto Rusak">
                                         @else
                                             <p>Foto Tidak Ada</p>
                                         @endif
@@ -92,7 +105,12 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <a onclick="document.getElementById('formcreate').submit();" class="btn btn-info">Tanggapi</a>
+                                @if ($pengaduan->status == 'dikirim' || $pengaduan->status == 'selesai' )
+                                    <button disabled="disabled" class="btn btn-info">Tanggapi</button>
+                                @else
+                                    <a onclick="document.getElementById('formcreate-{{$pengaduan->id}}').submit();" class="btn btn-info">Tanggapi</a>
+                                    {{-- <a href="#" onclick="event.preventDefault(); document.getElementById('formcreate').submit();">Tanggapi</a> --}}
+                                @endif
                             </div>
                         </div>
                     </div>
